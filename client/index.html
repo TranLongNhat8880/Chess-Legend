@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Legend - Đăng nhập</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="game-title">CHESS<br>LEGEND</h1>
+
+        <div id="login-form">
+            <h2 class="form-title">ĐĂNG NHẬP</h2>
+            <div class="input-group">
+                <input type="text" id="login-username" placeholder="Tên đăng nhập">
+            </div>
+            <div class="input-group">
+                <input type="password" id="login-password" placeholder="Mật khẩu">
+            </div>
+            <button class="btn-main" onclick="handleLogin()">VÀO GAME</button>
+            <p class="switch-text">
+                Chưa có tài khoản? <a href="#" onclick="toggleForm()">Đăng ký ngay</a>
+            </p>
+        </div>
+
+        <div id="register-form" style="display: none;">
+            <h2 class="form-title">ĐĂNG KÝ MỚI</h2>
+            <div class="input-group">
+                <input type="text" id="reg-username" placeholder="Tên đăng nhập">
+            </div>
+            <div class="input-group">
+                <input type="email" id="reg-email" placeholder="Email">
+            </div>
+            <div class="input-group">
+                <input type="password" id="reg-password" placeholder="Mật khẩu">
+            </div>
+            <button class="btn-main" onclick="handleRegister()">TẠO TÀI KHOẢN</button>
+            <p class="switch-text">
+                Đã có tài khoản? <a href="#" onclick="toggleForm()">Quay lại đăng nhập</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>

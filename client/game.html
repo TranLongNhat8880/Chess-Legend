@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Legend - Trận đấu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/game.css">
+    
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+</head>
+<body>
+
+    <div class="main-layout">
+        
+        <div class="board-section">
+            <div class="player-info opponent">
+                <img src="assets/images/BlackKing.png" class="avatar" alt="Opponent">
+                <div class="details">
+                    <span class="name" id="opponent-name">Đang tìm đối thủ...</span>
+                    <span class="elo" id="opponent-elo">ELO: ???</span>
+                </div>
+                <div class="timer" id="opponent-timer">10:00</div>
+            </div>
+
+            <div class="board-wrapper">
+                <img src="assets/images/Board.png" class="board-bg" alt="Board">
+                <div id="chess-board" class="chess-grid"></div>
+            </div>
+
+            <div class="player-info me">
+                <img src="assets/images/WhiteKing.png" class="avatar" id="my-avatar" alt="Me">
+                <div class="details">
+                    <span class="name" id="my-name">...</span>
+                    <span class="elo" id="my-elo">ELO: ...</span>
+                </div>
+                <div class="timer" id="my-timer">10:00</div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h2 class="sidebar-title" id="room-id-display">PHÒNG: ---</h2>
+            
+            <div class="move-history" id="move-history">
+                <div style="text-align: center; color: #777; padding-top: 10px; font-size: 12px;">Trận đấu bắt đầu</div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-game btn-draw">Xin hòa 🤝</button>
+                <button class="btn-game btn-resign">Đầu hàng 🏳️</button>
+                <button class="btn-game btn-quit" onclick="location.href='dashboard.html'">Thoát trận</button>
+            </div>
+
+            <div class="chat-container">
+                <h3 class="chat-title">TRÒ CHUYỆN</h3>
+                <div id="chat-box" class="chat-box">
+                    <div class="chat-message system">Chúc bạn chơi game vui vẻ!</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chat-input" placeholder="Chat..." onkeypress="handleChatKey(event)">
+                    <button onclick="sendChat()" class="btn-send">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 class="modal-title" style="color: #fbc02d;">XÁC NHẬN</h2>
+            <p class="modal-message" id="confirm-message">Bạn có chắc chắn không?</p>
+            <div class="modal-buttons">
+                <button id="btn-confirm-yes" class="btn-game btn-resign">ĐỒNG Ý</button>
+                <button onclick="document.getElementById('confirm-modal').style.display='none'" class="btn-game btn-quit" style="background: #a1887f;">HỦY BỎ</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 class="modal-title" id="modal-title">KẾT THÚC</h2>
+            <p class="modal-message" id="modal-message">...</p>
+            <div class="modal-buttons">
+                <button class="btn-game btn-quit" onclick="location.href='dashboard.html'">Về Sảnh</button>
+                <button class="btn-game btn-draw" onclick="location.reload()">Chơi Lại</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/game.js"></script>
+</body>
+</html>

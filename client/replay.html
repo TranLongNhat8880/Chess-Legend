@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chess Legend - Xem Lại</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/game.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <style>
+        /* CSS riêng cho thanh điều khiển Replay */
+        .control-panel {
+            background: #fff8e1; 
+            border: 3px solid #5d4037; 
+            border-radius: 8px;
+            padding: 15px; 
+            margin-top: 15px; 
+            display: flex; 
+            gap: 10px; 
+            justify-content: center;
+        }
+        
+        .btn-control {
+            background: #5d4037; 
+            color: white; 
+            border: none; 
+            border-bottom: 4px solid #3e2723;
+            padding: 10px 20px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-family: monospace; 
+            font-size: 20px;
+            transition: transform 0.1s;
+        }
+        
+        .btn-control:active {
+            transform: translateY(3px); 
+            border-bottom-width: 1px;
+        }
+        
+        .btn-control:disabled {
+            background: #a1887f; 
+            border-color: #8d6e63; 
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .replay-header {
+            background: #1976d2; 
+            color: white; 
+            padding: 10px; 
+            text-align: center; 
+            font-weight: bold; 
+            border-radius: 6px 6px 0 0;
+            border: 3px solid #5d4037;
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-layout">
+        
+        <div class="board-section">
+            <div class="player-info opponent">
+                <img src="assets/images/BlackKing.png" class="avatar">
+                <div class="details">
+                    <span class="name" id="black-name">Loading...</span>
+                    <span class="elo">QUÂN ĐEN</span>
+                </div>
+            </div>
+
+            <div class="board-wrapper">
+                <img src="assets/images/Board.png" class="board-bg">
+                <div id="chess-board" class="chess-grid"></div>
+            </div>
+
+            <div class="player-info me">
+                <img src="assets/images/WhiteKing.png" class="avatar">
+                <div class="details">
+                    <span class="name" id="white-name">Loading...</span>
+                    <span class="elo">QUÂN TRẮNG</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="replay-header">CHẾ ĐỘ XEM LẠI</div>
+            
+            <div class="move-history" id="move-history" style="height: 380px; border-radius: 0 0 6px 6px;">
+                <p style="text-align:center; color:#666; margin-top:10px;">Đang tải dữ liệu trận đấu...</p>
+            </div>
+
+            <div class="control-panel">
+                <button class="btn-control" onclick="firstMove()" title="Về đầu">|&lt;</button>
+                <button class="btn-control" onclick="prevMove()" title="Lùi 1 nước">&lt;</button>
+                <button class="btn-control" onclick="nextMove()" title="Tiến 1 nước">&gt;</button>
+                <button class="btn-control" onclick="lastMove()" title="Về cuối">&gt;|</button>
+            </div>
+
+            <button class="btn-game btn-quit" onclick="window.close()" style="margin-top: 15px;">ĐÓNG CỬA SỔ</button>
+        </div>
+    </div>
+
+    <script src="js/replay.js"></script>
+</body>
+</html>

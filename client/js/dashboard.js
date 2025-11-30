@@ -70,50 +70,53 @@ function openSettings() {
 }
 
 async function saveSettings() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const avatarCode = document.getElementById('selected-avatar').value;
     const oldPass = document.getElementById('old-pass').value;
     const newPass = document.getElementById('new-pass').value;
-    const avatarCode = document.getElementById('selected-avatar').value;
-    const user = JSON.parse(localStorage.getItem('user'));
 
-    if (!oldPass) return alert("Vui lòng nhập Mật khẩu cũ để xác nhận!");
+    let updated = false;
 
-    try {
-        const res = await fetch('http://localhost:5000/api/auth/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: user.Username,
-                oldPassword: oldPass,
-                newPassword: newPass,
-                avatarCode: avatarCode
-            })
-        });
-
-        // Kiểm tra xem phản hồi có phải JSON không
-        const contentType = res.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            throw new Error("Server trả về lỗi không phải JSON (Có thể sai Route)");
-        }
-
-        const data = await res.json();
-
-        if (res.ok) {
-            alert("✅ " + data.message);
-            user.AvatarCode = avatarCode;
-            localStorage.setItem('user', JSON.stringify(user));
-            loadUserInfo();
-            document.getElementById('settings-modal').style.display = 'none';
-        } else {
-            alert("❌ " + data.message);
-        }
-
-    } catch (err) {
-        console.error(err);
-        alert("Lỗi kết nối Server: " + err.message);
+    // 1. Xử lý Đổi Avatar (Nếu khác cái cũ)
+    if (avatarCode !== (user.AvatarCode || 'WhiteKing')) {
+        try {
+            const res = await fetch('http://localhost:5000/api/auth/update/avatar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: user.Username, avatarCode })
+            });
+            if (res.ok) {
+                user.AvatarCode = avatarCode;
+                localStorage.setItem('user', JSON.stringify(user));
+                loadUserInfo(); // Cập nhật giao diện
+                updated = true;
+            }
+        } catch (e) { console.error(e); }
     }
+
+    // 2. Xử lý Đổi Mật khẩu (Nếu có nhập)
+    if (newPass) {
+        if (!oldPass) return alert("Phải nhập mật khẩu cũ để đổi pass mới!");
+        try {
+            const res = await fetch('http://localhost:5000/api/auth/update/password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ username: user.Username, oldPassword: oldPass, newPassword: newPass })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                updated = true;
+                alert("Đổi mật khẩu thành công!");
+            } else {
+                return alert("Lỗi đổi pass: " + data.message);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    if (updated && !newPass) alert("Cập nhật Avatar thành công!"); // Nếu chỉ đổi avt
+    document.getElementById('settings-modal').style.display = 'none';
 }
 
-// ... (Các hàm khác copy từ phiên bản trước: updateRealTimeElo, fetchRooms, createRoomUI, findMatch, joinRoomById, joinRoom, goToGame, logout, showHistoryModal GIỮ NGUYÊN) ...
 async function updateRealTimeElo() {
     const userJson = localStorage.getItem('user');
     if (!userJson) return;

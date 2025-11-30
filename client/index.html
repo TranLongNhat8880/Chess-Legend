@@ -3,32 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chess Legend - Đăng nhập</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <title>Chess Legend - Đăng Nhập</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container">
+
+    <div id="login-main-screen" class="container">
         <h1 class="game-title">CHESS<br>LEGEND</h1>
 
-        <div id="login-form">
+        <div id="login-form-container">
             <h2 class="form-title">ĐĂNG NHẬP</h2>
-            <div class="input-group">
-                <input type="text" id="login-username" placeholder="Tên đăng nhập">
-            </div>
-            <div class="input-group">
-                <input type="password" id="login-password" placeholder="Mật khẩu">
-            </div>
-            <button class="btn-main" onclick="handleLogin()">VÀO GAME</button>
+            <form id="login-form"> <div class="input-group">
+                    <input type="text" id="login-username" placeholder="Tên đăng nhập" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="login-password" placeholder="Mật khẩu" required>
+                </div>
+                <button type="submit" class="btn-main">VÀO GAME</button>
+            </form>
+            
+            <p class="switch-text">
+                <a href="#" onclick="showForgotPasswordModal()" style="color: #d84315;">Quên mật khẩu?</a>
+            </p>
             <p class="switch-text">
                 Chưa có tài khoản? <a href="#" onclick="toggleForm()">Đăng ký ngay</a>
             </p>
         </div>
 
-        <div id="register-form" style="display: none;">
+        <div id="register-form-container" style="display: none;">
             <h2 class="form-title">ĐĂNG KÝ MỚI</h2>
             <div class="input-group">
                 <input type="text" id="reg-username" placeholder="Tên đăng nhập">
@@ -43,6 +46,32 @@
             <p class="switch-text">
                 Đã có tài khoản? <a href="#" onclick="toggleForm()">Quay lại đăng nhập</a>
             </p>
+        </div>
+    </div>
+
+    <div id="forgot-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content" style="width: 350px; text-align: center;">
+            <h2 style="color:#5d4037; margin-bottom: 20px;">QUÊN MẬT KHẨU</h2>
+            <p style="font-size: 14px; margin-bottom: 15px;">Nhập Email để nhận mã OTP/Link.</p>
+            
+            <input type="email" id="forgot-email" placeholder="Email của bạn" required style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box; border:2px solid #5d4037; border-radius:4px;">
+            
+            <p id="forgot-status" style="font-size: 12px; height: 15px; margin-bottom: 10px; font-weight: bold;"></p>
+            
+            <button onclick="requestResetLink()" class="btn-main" style="width:100%; background:#388e3c;">GỬI YÊU CẦU</button>
+            <button onclick="closeForgotPasswordModal()" class="btn-main" style="width:100%; margin-top:5px; background:#a1887f;">QUAY LẠI</button>
+        </div>
+    </div>
+
+    <div id="reset-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content" style="width: 350px; text-align: center;">
+            <h2 style="color:#5d4037; margin-bottom: 20px;">ĐẶT LẠI MẬT KHẨU</h2>
+            <p style="font-size: 14px; margin-bottom: 15px;">Nhập mật khẩu mới của bạn.</p>
+            <input type="password" id="reset-new-pass" placeholder="Mật khẩu mới (Min 5 ký tự)" required style="width:100%; padding:10px; margin-bottom:15px; box-sizing:border-box; border:2px solid #5d4037; border-radius:4px;">
+            <input type="hidden" id="reset-token-field">
+            
+            <button onclick="resetPasswordFinal()" class="btn-main" style="width:100%; background:#d32f2f;">LƯU MẬT KHẨU</button>
+            <button onclick="window.location.href='index.html'" class="btn-main" style="width:100%; margin-top:5px; background:#a1887f;">VỀ ĐĂNG NHẬP</button>
         </div>
     </div>
 

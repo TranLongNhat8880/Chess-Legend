@@ -99,17 +99,17 @@ CREATE TABLE PasswordResets (
     ExpiresAt DATETIME NOT NULL,
     FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
+```
 
-2. Cài đặt Project
+### 2. Cài đặt Project
 Yêu cầu máy tính đã cài đặt Node.js.
-
 Clone hoặc tải source code về máy.
-
 Mở Terminal tại thư mục server/ và chạy lệnh:
-
+```bash
 npm install
+```
 Tạo file .env trong thư mục server/ và điền thông tin Database/Email của bạn:
-
+```env
 PORT=5000
 DB_USER=<Tên đăng nhập SQL>
 DB_PASSWORD=<Mật khẩu SQL>
@@ -119,10 +119,12 @@ DB_NAME=ChessLegendDB
 # Cấu hình gửi mail (Gmail App Password)
 EMAIL_USER=<Email gửi mã reset>
 EMAIL_PASS=<Mật khẩu ứng dụng Email>
-3. Khởi chạy
+```
+### 3. Khởi chạy
 Bước 1: Chạy Server Tại thư mục server/, chạy lệnh:
-
+```bash
 npx nodemon index.js
+```
 Bước 2: Chạy Client Sử dụng Live Server (Extension của VS Code) để mở file client/index.html.
 
 Dự án được phát triển bởi Long Nhat (aka Chen Long Yi)

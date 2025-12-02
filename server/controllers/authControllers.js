@@ -1,8 +1,9 @@
 const { sql } = require('../config/db');
-const crypto = require('crypto'); // Thư viện có sẵn của Node.js
-const nodemailer = require('nodemailer'); // 1. Import thư viện
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+// --- CẤU HÌNH GỬI MAIL ---
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -11,25 +12,28 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// 1. Đăng ký (Giữ nguyên)
+// 1. ĐĂNG KÝ
 const registerUser = async (req, res) => {
     const { username, email, password } = req.body;
     try {
         if (!username || !email || !password) return res.status(400).json({ message: 'Thiếu thông tin!' });
+        
         const pool = await sql.connect();
+        // Mặc định Avatar là 'WhitePawn' (Tốt Trắng) để tránh lỗi ảnh
         await pool.request()
             .input('Username', sql.NVarChar, username)
             .input('Email', sql.NVarChar, email)
             .input('PasswordHash', sql.NVarChar, password)
             .query(`INSERT INTO Users (Username, Email, PasswordHash, CurrentElo, AvatarCode) VALUES (@Username, @Email, @PasswordHash, 600, 'WhitePawn')`);
+            
         res.status(201).json({ message: 'Đăng ký thành công!' });
     } catch (error) {
-        if (error.number === 2627) return res.status(400).json({ message: 'Tên hoặc Email đã tồn tại!' });
+        if (error.number === 2627) return res.status(400).json({ message: 'Tên đăng nhập hoặc Email đã tồn tại!' });
         res.status(500).json({ message: 'Lỗi server: ' + error.message });
     }
 };
 
-// 2. Đăng nhập (Giữ nguyên)
+// 2. ĐĂNG NHẬP
 const loginUser = async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -42,12 +46,12 @@ const loginUser = async (req, res) => {
         if (result.recordset.length > 0) {
             res.json({ message: 'Đăng nhập thành công!', user: result.recordset[0] });
         } else {
-            res.status(401).json({ message: 'Sai thông tin!' });
+            res.status(401).json({ message: 'Sai tên đăng nhập hoặc mật khẩu!' });
         }
     } catch (error) { res.status(500).json({ message: 'Lỗi server' }); }
 };
 
-// 3. Lấy ELO (Giữ nguyên)
+// 3. LẤY THÔNG TIN ELO (STATS)
 const getUserStats = async (req, res) => {
     const { username } = req.body;
     try {
@@ -55,60 +59,63 @@ const getUserStats = async (req, res) => {
         const result = await pool.request()
             .input('u', sql.NVarChar, username)
             .query('SELECT CurrentElo, TotalWins, TotalMatches FROM Users WHERE Username = @u');
-        if (result.recordset.length > 0) res.json(result.recordset[0]);
-        else res.status(404).json({ message: "Không tìm thấy user" });
+            
+        if (result.recordset.length > 0) {
+            res.json(result.recordset[0]);
+        } else {
+            res.status(404).json({ message: "Không tìm thấy user" });
+        }
     } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
-// --- MỚI: TÁCH RIÊNG CẬP NHẬT ---
-
-// 4. Cập nhật AVATAR
+// 4. CẬP NHẬT AVATAR
 const updateAvatar = async (req, res) => {
     const { username, avatarCode } = req.body;
     try {
         const pool = await sql.connect();
         await pool.request()
             .input('u', sql.NVarChar, username)
-            .input('avt', sql.NVarChar, avatarCode)
-            .query("UPDATE Users SET AvatarCode = @avt WHERE Username = @u");
-        res.json({ message: "Đổi Avatar thành công!" });
-    } catch (err) { res.status(500).json({ message: "Lỗi server" }); }
+            .input('avatar', sql.NVarChar, avatarCode)
+            .query("UPDATE Users SET AvatarCode = @avatar WHERE Username = @u");
+        res.json({ message: "Cập nhật Avatar thành công!", avatarCode });
+    } catch (err) { res.status(500).json({ message: "Lỗi Server" }); }
 };
 
-// 5. Cập nhật MẬT KHẨU (Có check pass cũ)
+// 5. CẬP NHẬT MẬT KHẨU (CHỦ ĐỘNG)
 const updatePassword = async (req, res) => {
     const { username, oldPassword, newPassword } = req.body;
     try {
         const pool = await sql.connect();
-        // Check pass cũ
-        const check = await pool.request()
+        
+        // Kiểm tra mật khẩu cũ
+        const userResult = await pool.request()
             .input('u', sql.NVarChar, username)
             .input('p', sql.NVarChar, oldPassword)
-            .query("SELECT UserID FROM Users WHERE Username = @u AND PasswordHash = @p");
-            
-        if (check.recordset.length === 0) return res.status(401).json({ message: "Mật khẩu cũ không đúng!" });
+            .query("SELECT * FROM Users WHERE Username = @u AND PasswordHash = @p");
 
-        // Update pass mới
+        if (userResult.recordset.length === 0) return res.status(401).json({ message: "Mật khẩu cũ không đúng!" });
+        if (!newPassword || newPassword.trim() === "") return res.status(400).json({ message: "Mật khẩu mới không được trống." });
+
+        // Cập nhật mật khẩu mới
         await pool.request()
             .input('u', sql.NVarChar, username)
-            .input('np', sql.NVarChar, newPassword)
-            .query("UPDATE Users SET PasswordHash = @np WHERE Username = @u");
-            
+            .input('newPass', sql.NVarChar, newPassword)
+            .query("UPDATE Users SET PasswordHash = @newPass WHERE Username = @u");
+
         res.json({ message: "Đổi mật khẩu thành công!" });
-    } catch (err) { res.status(500).json({ message: "Lỗi server" }); }
+    } catch (err) { res.status(500).json({ message: "Lỗi Server" }); }
 };
 
-// --- MỚI: QUÊN MẬT KHẨU ---
-
-// 6. Yêu cầu Reset (Tạo Token)
+// 6. YÊU CẦU QUÊN MẬT KHẨU (GỬI EMAIL)
 const requestPasswordReset = async (req, res) => {
     const { email } = req.body;
+    console.log("📨 Đang xử lý yêu cầu reset cho:", email);
+
     try {
         const pool = await sql.connect();
         const userRes = await pool.request().input('e', sql.NVarChar, email).query("SELECT UserID, Username FROM Users WHERE Email = @e");
         
         if (userRes.recordset.length === 0) {
-            // Vẫn báo thành công giả để bảo mật
             return res.json({ message: "Nếu email tồn tại, link reset sẽ được gửi." });
         }
 
@@ -116,7 +123,7 @@ const requestPasswordReset = async (req, res) => {
         const token = crypto.randomBytes(20).toString('hex');
         const expires = new Date(Date.now() + 3600000); // 1 giờ
 
-        // Lưu DB
+        // Xóa token cũ & Tạo token mới
         await pool.request().input('uid', sql.Int, user.UserID).query("DELETE FROM PasswordResets WHERE UserID = @uid");
         await pool.request()
             .input('uid', sql.Int, user.UserID)
@@ -124,86 +131,97 @@ const requestPasswordReset = async (req, res) => {
             .input('exp', sql.DateTime, expires)
             .query("INSERT INTO PasswordResets (UserID, Token, ExpiresAt) VALUES (@uid, @token, @exp)");
 
-        // Link Reset
         const resetLink = `http://127.0.0.1:5500/client/index.html?token=${token}`;
 
-        // GỬI EMAIL THẬT
-        const mailOptions = {
+        // Template Email HTML
+        const emailHtml = `
+        <div style="font-family: 'Segoe UI', sans-serif; background-color: #f4f4f4; padding: 40px 0;">
+            <div style="max-width: 500px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <div style="background-color: #5d4037; padding: 25px; text-align: center;">
+                    <h1 style="color: #ffffff; margin: 0; letter-spacing: 1px;">♟️ CHESS LEGEND</h1>
+                </div>
+                <div style="padding: 30px; text-align: center; color: #333;">
+                    <h2 style="color: #5d4037; margin-top: 0;">Yêu cầu Đặt lại Mật khẩu</h2>
+                    <p style="font-size: 16px; color: #555;">Xin chào <strong>${user.Username}</strong>,</p>
+                    <p style="margin-bottom: 30px;">Bạn vừa yêu cầu khôi phục mật khẩu. Nhấn vào nút bên dưới để tiếp tục:</p>
+                    
+                    <a href="${resetLink}" style="display: inline-block; background-color: #388e3c; color: #ffffff; text-decoration: none; padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 5px; transition: background 0.3s;">
+                        ĐẶT LẠI MẬT KHẨU
+                    </a>
+
+                    <p style="margin-top: 30px; font-size: 13px; color: #999;">
+                        Link này sẽ hết hạn sau 1 giờ.<br>
+                        Nếu nút không hoạt động, hãy copy link này:<br>
+                        <a href="${resetLink}" style="color: #388e3c;">${resetLink}</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        `;
+
+        // Gửi mail
+        await transporter.sendMail({
             from: `"Chess Legend Support" <${process.env.EMAIL_USER}>`,
             to: email,
-            subject: '🔒 Yêu cầu đặt lại mật khẩu - Chess Legend',
-            html: `
-                <h3>Xin chào ${user.Username},</h3>
-                <p>Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản Chess Legend.</p>
-                <p>Vui lòng nhấn vào link bên dưới để tiếp tục (Link hết hạn sau 1 giờ):</p>
-                <a href="${resetLink}" style="background:#388e3c; color:white; padding:10px 20px; text-decoration:none; border-radius:5px;">ĐẶT LẠI MẬT KHẨU</a>
-                <p>Hoặc copy link này: ${resetLink}</p>
-                <p>Nếu không phải bạn, vui lòng bỏ qua email này.</p>
-            `
-        };
+            subject: '🔑 Khôi phục mật khẩu - Chess Legend',
+            html: emailHtml
+        });
 
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ Email đã gửi tới: ${email}`);
+        res.json({ message: "Đã gửi email khôi phục! Vui lòng kiểm tra hộp thư." });
 
-        // Trả về thông báo chuẩn (Không gửi link debug về client nữa)
-        res.json({ message: "Đã gửi email khôi phục! Vui lòng kiểm tra Hộp thư đến (hoặc Spam)." });
-
-    } catch (err) {
-        console.error("Lỗi gửi mail:", err);
-        res.status(500).json({ message: "Lỗi Server khi gửi mail." });
+    } catch (err) { 
+        console.error(err); 
+        res.status(500).json({ message: "Lỗi Server khi gửi mail." }); 
     }
 };
 
-// 7. Thực hiện Reset (Dùng Token)
-// 7. Reset Password (Debug Version - In lỗi chi tiết ra Console Server)
+// 7. ĐẶT LẠI MẬT KHẨU (RESET BẰNG TOKEN)
 const resetPassword = async (req, res) => {
     const { token, newPassword } = req.body;
     
-    console.log("--------------- DEBUG RESET PASSWORD ---------------");
-    console.log("👉 Token Client gửi lên:", token);
+    console.log("🔒 Đang reset pass với Token:", token);
+
+    if (!token) return res.status(400).json({ message: "Lỗi: Token rỗng. Đừng F5 trang web!" });
 
     try {
         const pool = await sql.connect();
         
-        // 1. Kiểm tra xem Token có tồn tại trong DB không (Bỏ qua check hạn để debug)
+        // Kiểm tra Token
         const checkToken = await pool.request()
             .input('token', sql.NVarChar, token)
-            .query("SELECT * FROM PasswordResets WHERE Token = @token");
+            .query("SELECT UserID FROM PasswordResets WHERE Token = @token AND ExpiresAt > GETDATE()");
 
         if (checkToken.recordset.length === 0) {
-            console.log("❌ LỖI: Token này không tìm thấy trong Database!");
-            console.log("   -> Nguyên nhân: Có thể bạn đã yêu cầu link mới, làm link cũ bị xóa.");
-            return res.status(400).json({ message: "Link này không tồn tại (Vui lòng lấy link mới nhất)." });
+            return res.status(400).json({ message: "Link không hợp lệ hoặc đã hết hạn! Vui lòng yêu cầu lại." });
         }
         
-        const record = checkToken.recordset[0];
-        console.log("✅ Tìm thấy Token trong DB. UserID:", record.UserID);
-        
-        // 2. Kiểm tra hết hạn
-        const now = new Date();
-        if (record.ExpiresAt < now) {
-            console.log("❌ LỖI: Token đã hết hạn lúc:", record.ExpiresAt);
-            return res.status(400).json({ message: "Link đã hết hạn sử dụng." });
-        }
+        const userId = checkToken.recordset[0].UserID;
 
-        const userId = record.UserID;
-
-        // 3. Đổi mật khẩu
+        // Cập nhật mật khẩu mới
         await pool.request()
-            .input('newPass', sql.NVarChar, newPassword)
-            .input('userId', sql.Int, userId)
-            .query("UPDATE Users SET PasswordHash = @newPass WHERE UserID = @userId");
+            .input('np', sql.NVarChar, newPassword)
+            .input('uid', sql.Int, userId)
+            .query("UPDATE Users SET PasswordHash = @np WHERE UserID = @uid");
 
-        // 4. Xóa token
+        // Xóa Token sau khi dùng
         await pool.request().input('token', sql.NVarChar, token).query("DELETE FROM PasswordResets WHERE Token = @token");
 
-        console.log("✅ Đổi mật khẩu thành công!");
-        res.json({ message: "Đổi mật khẩu thành công! Hãy đăng nhập lại." });
+        console.log("✅ Đổi mật khẩu thành công cho UserID:", userId);
+        res.json({ message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại." });
 
     } catch (error) {
-        console.error("❌ Lỗi Server:", error);
-        res.status(500).json({ message: "Lỗi server nội bộ" });
+        console.error("❌ Lỗi SQL:", error);
+        res.status(500).json({ message: "Lỗi server" });
     }
 };
 
-module.exports = { registerUser, loginUser, getUserStats, updateAvatar, updatePassword, requestPasswordReset, resetPassword };
+// --- XUẤT ĐỦ 7 HÀM ---
+module.exports = { 
+    registerUser, 
+    loginUser, 
+    getUserStats, 
+    updateAvatar, 
+    updatePassword, 
+    requestPasswordReset, 
+    resetPassword 
+};

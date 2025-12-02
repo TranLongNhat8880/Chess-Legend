@@ -235,3 +235,38 @@ body {
     font-weight: bold;
 }
 .btn-send:hover { background: #7cb342; }
+
+/* --- TỌA ĐỘ BÀN CỜ --- */
+.square {
+    position: relative; /* Để căn chỉnh tọa độ con bên trong */
+}
+
+.coord {
+    position: absolute;
+    font-size: 12px; /* Hoặc 10px tùy sở thích */
+    font-family: sans-serif;
+    font-weight: bold;
+    pointer-events: none; /* QUAN TRỌNG: Để chuột bấm xuyên qua được, không bị chặn */
+    z-index: 1; /* Nằm dưới quân cờ nhưng trên nền */
+}
+
+/* Số hàng (1-8): Nằm góc trái trên */
+.coord-rank {
+    top: 2px;
+    left: 4px;
+}
+
+/* Chữ cột (a-h): Nằm góc phải dưới */
+.coord-file {
+    bottom: 0px;
+    right: 4px;
+}
+
+/* Màu sắc tương phản cho đẹp (Giả sử ô đen màu nâu, ô trắng màu kem) */
+/* Nếu ô là màu sáng -> Chữ màu nâu đậm */
+.square:nth-child(even) .coord { color: #779556; } 
+.square:nth-child(odd) .coord { color: #ebecd0; }
+
+
+.square.light-square .coord { color: #779556; } 
+.square.dark-square .coord { color: #ebecd0; }

@@ -6,7 +6,8 @@ export const State = {
     currentRoomId: localStorage.getItem('roomID'),
     myColor: 'w',
     isPvE: false,
-    selectedSquare: null
+    selectedSquare: null,
+    isGameActive: false
 };
 
 export const pieceTheme = {

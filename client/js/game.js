@@ -1,4 +1,3 @@
-// Import các module con
 import { State } from './game/gameState.js';
 import { initSocket } from './game/socketHandler.js';
 import { drawBoard } from './game/boardRenderer.js';
@@ -7,98 +6,40 @@ import { setupChat } from './game/chatManager.js';
 import { showConfirmModal, showModal, copyToClipboard } from './utils/helpers.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Kiểm tra đăng nhập (Bắt buộc)
     const userJson = localStorage.getItem('user');
     if (!userJson) return window.location.href = 'index.html';
     const user = JSON.parse(userJson);
 
-    // 2. Hiển thị thông tin người chơi & Giao diện ban đầu
+    // 1. Load thông tin giao diện
     loadGameInfo(user);
 
-    // 3. Kích hoạt Chat & Copy
+    // 2. Setup Chat & Copy
     setupChat();
-    // Gán hàm này vào window để HTML onclick gọi được
     window.copyRoomID = () => copyToClipboard(State.currentRoomId);
 
-    // 4. Khởi tạo Game theo chế độ (Mode)
+    // 3. Khởi tạo Game
     const mode = localStorage.getItem('gameMode');
-    
     if (mode === 'pve') {
-        // --- CHẾ ĐỘ PVE (ĐẤU MÁY) ---
         State.isPvE = true;
-        State.myColor = 'w'; // Luôn cầm Trắng
-        
-        // Cập nhật giao diện
+        State.myColor = 'w';
         document.getElementById('room-id-display').innerText = "ĐẤU VỚI MÁY";
         updateOpponentName("Stockfish AI");
-        const eloEl = document.getElementById('opponent-elo');
-        if(eloEl) eloEl.innerText = "Level: 5";
-
-        // Khởi động AI & Vẽ bàn cờ
+        
         initStockfish();
         drawBoard();
-
     } else {
-        // --- CHẾ ĐỘ PVP (ONLINE) ---
         State.isPvE = false;
-        
-        // Gọi socketHandler để xử lý kết nối, ghép trận, vào phòng
         initSocket(user); 
-        
-        // Vẽ bàn cờ trống trước khi nhận dữ liệu
         drawBoard();
     }
 
-    // 5. Gán sự kiện cho các nút chức năng (Đầu hàng, Xin hòa)
-    setupActionButtons();
-});
-
-// --- CÁC HÀM UI NỘI BỘ ---
-
-function loadGameInfo(user) {
-    // 1. Hiển thị thông tin bản thân
-    const myNameEl = document.getElementById('my-name');
-    if (myNameEl) myNameEl.innerText = user.Username;
-
-    const myAvt = user.AvatarCode || 'WhitePawn';
-    const myAvtEl = document.getElementById('my-avatar');
-    if (myAvtEl) myAvtEl.src = `assets/images/${myAvt}.png`;
-
-    // 2. Cập nhật trạng thái phòng ban đầu
-    const mode = localStorage.getItem('gameMode');
-    const roomDisplay = document.getElementById('room-id-display');
-
-    updateOpponentName("Đang tìm đối thủ...");
-    const eloEl = document.getElementById('opponent-elo');
-    if(eloEl) eloEl.innerText = "ELO: ???";
-
-    if (mode === 'matchmaking') {
-        if(roomDisplay) roomDisplay.innerText = "ĐANG TÌM TRẬN...";
-        updateOpponentName("Đang quét server...");
-    } else if (mode !== 'pve') {
-        // Nếu là tạo phòng/nhập ID -> Hiện mã phòng để copy
-        if(roomDisplay) {
-            roomDisplay.innerHTML = `PHÒNG: <span style="color:#ffeb3b;cursor:pointer" title="Bấm để copy" onclick="copyRoomID()">${State.currentRoomId} 📋</span>`;
-        }
-    }
-}
-
-function updateOpponentName(name) {
-    const el = document.getElementById('opponent-name');
-    if (el) el.innerText = name;
-}
-
-function setupActionButtons() {
-    // Nút Đầu Hàng
+    // 4. Gán sự kiện nút bấm
     const btnResign = document.querySelector('.btn-resign');
     if (btnResign) {
         btnResign.onclick = () => {
             if (State.isPvE) return alert("Đang đấu với máy thì bạn cứ thoát thôi!");
-            
             showConfirmModal("Bạn chắc chắn muốn ĐẦU HÀNG?", () => {
                 State.socket.emit('resign', State.currentRoomId);
-                
-                // Tự hiện thông báo thua cho mình luôn
                 const modal = document.getElementById('game-over-modal');
                 document.getElementById('modal-title').innerText = "THẤT BẠI 🏳️";
                 document.getElementById('modal-message').innerText = "Bạn đã đầu hàng.";
@@ -107,18 +48,57 @@ function setupActionButtons() {
         };
     }
 
-    // Nút Xin Hòa
     const btnDraw = document.querySelector('.btn-draw');
     if (btnDraw) {
         btnDraw.onclick = () => {
             if (State.isPvE) return alert("Máy không biết hòa đâu! Đánh tiếp đi.");
-            
             showConfirmModal("Gửi lời mời HÒA cho đối thủ?", () => {
                 State.socket.emit('offer_draw', State.currentRoomId);
                 alert("✅ Đã gửi lời mời. Chờ đối thủ trả lời...");
             });
         };
     }
-    
-    // Nút Thoát (về Dashboard) đã được xử lý bằng onclick="location.href=..." trong HTML
+});
+
+// --- CÁC HÀM UI ---
+
+function loadGameInfo(user) {
+    // 1. Set thông tin của mình
+    const myNameEl = document.getElementById('my-name');
+    if(myNameEl) myNameEl.innerText = user.Username;
+
+    const myAvt = user.AvatarCode || 'WhitePawn';
+    const myAvtEl = document.getElementById('my-avatar');
+    if(myAvtEl) myAvtEl.src = `assets/images/${myAvt}.png`;
+
+    // 2. Set thông tin đối thủ (Mặc định)
+    const opAvtEl = document.querySelector('.player-info.opponent .avatar');
+    if (opAvtEl) opAvtEl.src = 'assets/images/BlackKing.png'; // Ảnh mặc định
+    // ---------------------------------------------------
+
+    updateOpponentName("Đang tìm đối thủ...");
+    const eloEl = document.getElementById('opponent-elo');
+    if(eloEl) eloEl.innerText = "ELO: ???";
+
+    // 3. Xử lý hiển thị theo chế độ chơi
+    const mode = localStorage.getItem('gameMode');
+    const roomDisplay = document.getElementById('room-id-display');
+    const currentRoomId = localStorage.getItem('roomID'); // Lấy ID từ localStorage
+
+    if (mode === 'pve') {
+        updateOpponentName("Stockfish AI");
+        if(roomDisplay) roomDisplay.innerText = "ĐẤU VỚI MÁY";
+    } else if (mode === 'matchmaking') {
+        if(roomDisplay) roomDisplay.innerText = "ĐANG TÌM TRẬN...";
+        updateOpponentName("Đang quét server...");
+    } else {
+        if(roomDisplay) {
+            roomDisplay.innerHTML = `PHÒNG: <span style="color:#ffeb3b;cursor:pointer" title="Bấm để copy" onclick="copyRoomID()">${currentRoomId} 📋</span>`;
+        }
+    }
+}
+
+function updateOpponentName(name) {
+    const el = document.getElementById('opponent-name');
+    if (el) el.innerText = name;
 }

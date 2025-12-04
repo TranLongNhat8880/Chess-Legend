@@ -11,7 +11,7 @@ export function initStockfish() {
         worker.onmessage = (e) => {
             // Nhận nước đi từ máy (Format: "bestmove e2e4 ...")
             if (e.data.startsWith('bestmove')) {
-                const moveStr = e.data.split(' ')[1]; // Lấy chuỗi tọa độ (ví dụ: e7e5)
+                const moveStr = e.data.split(' ')[1]; // Lấy chuỗi tọa độ 
                 
                 if (moveStr) {
                     // Thực hiện nước đi trên logic game

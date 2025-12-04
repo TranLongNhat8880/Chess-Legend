@@ -1,16 +1,15 @@
 import { State } from './gameState.js';
-import { drawBoard, addMoveToHistory } from './boardRenderer.js'; // Import hàm ghi lịch sử
+import { drawBoard, addMoveToHistory } from './boardRenderer.js'; 
 import { appendChatMessage } from './chatManager.js';
-import { playSound, formatTime, showModal, showConfirmModal, showGameOverModal } from '../utils/helpers.js';
+import { playSound, formatTime, showConfirmModal, showGameOverModal } from '../utils/helpers.js';
 
 export function initSocket(user) {
     State.socket = io('http://localhost:5000');
     const socket = State.socket;
 
-    // Logic vào phòng / tìm trận
     if (localStorage.getItem('gameMode') === 'matchmaking') {
         document.getElementById('room-id-display').innerText = "ĐANG TÌM...";
-        socket.emit('find_match', { username: user.Username, elo: user.CurrentElo });
+        socket.emit('find_match', { username: user.Username, elo: user.CurrentElo, avatarCode: user.AvatarCode });
         
         socket.on('match_found', (data) => {
             State.currentRoomId = data.roomId;
@@ -20,7 +19,8 @@ export function initSocket(user) {
                 roomId: data.roomId, 
                 username: user.Username, 
                 elo: user.CurrentElo, 
-                userId: user.UserID 
+                userId: user.UserID,
+                avatarCode: user.AvatarCode 
             });
             playSound('notify');
         });
@@ -30,7 +30,8 @@ export function initSocket(user) {
             username: user.Username, 
             elo: user.CurrentElo, 
             userId: user.UserID, 
-            password: localStorage.getItem('roomPass') 
+            password: localStorage.getItem('roomPass'),
+            avatarCode: user.AvatarCode
         });
     }
 
@@ -48,25 +49,28 @@ function setupSocketListeners() {
     socket.on('vs_connect', (data) => {
         document.getElementById('opponent-name').innerText = data.opponentName;
         document.getElementById('opponent-elo').innerText = "ELO: " + data.opponentElo;
+        const opAvatar = data.opponentAvatar || 'BlackKing';
+        const opImg = document.querySelector('.player-info.opponent .avatar');
+        if(opImg) opImg.src = `assets/images/${opAvatar}.png`;
+        
+        State.isGameActive = true; // Mở khóa bàn cờ
         playSound('notify');
     });
 
-    // --- 👇 QUAN TRỌNG: SỬA ĐOẠN NÀY ĐỂ GHI LỊCH SỬ 👇 ---
+    // --- 👇 ĐOẠN SỬA LỖI LỊCH SỬ 👇 ---
     socket.on('receive_move', (moveData) => {
-        console.log("Nhận nước đi từ đối thủ:", moveData);
-        
-        // Thực hiện lại nước đi trên máy mình để lấy thông tin đầy đủ (SAN)
+        // Thực hiện nước đi trên logic client để lấy thông tin đầy đủ (SAN)
         const result = State.game.move(moveData);
         
         if (result) {
-            drawBoard(); // Vẽ lại bàn cờ
-            addMoveToHistory(result); // Ghi vào bảng lịch sử
+            drawBoard(); // Vẽ lại
             
-            // Âm thanh
+            addMoveToHistory(result); // <--- GHI LỊCH SỬ CỦA ĐỐI THỦ VÀO ĐÂY
+            
             playSound(result.flags.includes('c') ? 'capture' : 'move');
         }
     });
-    // ---------------------------------------------------
+    // ----------------------------------
 
     socket.on('time_update', (data) => {
         document.getElementById('my-timer').innerText = formatTime(State.myColor === 'w' ? data.w : data.b);
@@ -74,26 +78,10 @@ function setupSocketListeners() {
     });
 
     socket.on('receive_chat', (data) => appendChatMessage(data.username, data.message, 'opponent'));
-    
-    socket.on('game_over_timeout', (data) => { 
-        playSound('notify'); 
-        showGameOverModal("HẾT GIỜ! ⏰", `${data.winner} chiến thắng.`); 
-    });
-    
-    socket.on('opponent_resigned', () => { 
-        playSound('notify'); 
-        showGameOverModal("CHIẾN THẮNG! 🏆", "Đối thủ đã đầu hàng."); 
-    });
-    
-    socket.on('opponent_disconnected', () => { 
-        playSound('notify'); 
-        showGameOverModal("CHIẾN THẮNG! 🏆", "Đối thủ mất kết nối."); 
-    });
-    
-    socket.on('game_draw', () => { 
-        playSound('notify'); 
-        showGameOverModal("HÒA CỜ 🤝", "Hai bên thỏa thuận hòa."); 
-    });
+    socket.on('game_over_timeout', (data) => { playSound('notify'); showGameOverModal("HẾT GIỜ! ⏰", `${data.winner} chiến thắng.`); });
+    socket.on('opponent_resigned', () => { playSound('notify'); showGameOverModal("CHIẾN THẮNG! 🏆", "Đối thủ đã đầu hàng."); });
+    socket.on('opponent_disconnected', () => { State.isGameActive = false; playSound('notify'); showGameOverModal("CHIẾN THẮNG! 🏆", "Đối thủ mất kết nối."); });
+    socket.on('game_draw', () => { playSound('notify'); showGameOverModal("HÒA CỜ 🤝", "Hai bên thỏa thuận hòa."); });
     
     socket.on('receive_draw_offer', () => {
         playSound('notify');
@@ -102,7 +90,7 @@ function setupSocketListeners() {
 
     socket.on('join_error', (data) => { alert(data.message); window.location.href = 'dashboard.html'; });
     socket.on('room_full', (data) => { alert(data.message); window.location.href = 'dashboard.html'; });
-
+    
     socket.on('update_user_stats', (data) => {
         const eloEl = document.getElementById('my-elo');
         if(eloEl) eloEl.innerText = `ELO MỚI: ${data.newElo}`;

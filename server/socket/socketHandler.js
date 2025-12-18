@@ -51,7 +51,6 @@ module.exports = function(io) {
         socket.on('find_match', (data) => {
             const exist = matchmakingQueue.find(p => p.id === socket.id);
             if (exist) return;
-            // 👇 LƯU AVATAR VÀO HÀNG CHỜ 👇
             matchmakingQueue.push({ 
                 id: socket.id, 
                 username: data.username, 
@@ -78,13 +77,12 @@ module.exports = function(io) {
             const { roomId, username, elo, password, userId, avatarCode } = data; // <--- Nhận avatarCode
 
             if (roomPasswords[roomId] && roomPasswords[roomId] !== password) {
-                socket.emit('join_error', { message: "❌ Sai mật khẩu!" }); return;
+                socket.emit('join_error', { message: "Sai mật khẩu!" }); return;
             }
             if (!roomPlayers[roomId]) roomPlayers[roomId] = [];
             
             if (roomPlayers[roomId].length < 2) {
                 const color = roomPlayers[roomId].length === 0 ? 'w' : 'b';
-                // 👇 LƯU AVATAR VÀO ROOM PLAYERS 👇
                 roomPlayers[roomId].push({ 
                     id: socket.id, username, elo, color, dbId: userId,
                     avatarCode: avatarCode || 'WhitePawn' // <--- Lưu lại
@@ -103,7 +101,6 @@ module.exports = function(io) {
                     const p1 = roomPlayers[roomId][0];
                     const p2 = roomPlayers[roomId][1];
                     
-                    // 👇 GỬI AVATAR CHO ĐỐI THỦ 👇
                     io.to(p1.id).emit('vs_connect', { 
                         opponentName: p2.username, 
                         opponentElo: p2.elo,
@@ -118,7 +115,6 @@ module.exports = function(io) {
             } else { socket.emit('room_full', { message: "Phòng đầy!" }); }
         });
 
-        // GAMEPLAY EVENTS
         socket.on('send_move', (data) => {
             socket.to(data.roomId).emit('receive_move', data.move);
             if(roomTimeState[data.roomId]) roomTimeState[data.roomId].turn = (roomTimeState[data.roomId].turn === 'w') ? 'b' : 'w';

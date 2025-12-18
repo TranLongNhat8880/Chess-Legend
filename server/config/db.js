@@ -8,17 +8,17 @@ const config = {
     database: process.env.DB_NAME,
     options: {
         encrypt: true, 
-        trustServerCertificate: true // Quan trọng để chạy Local không bị lỗi SSL
+        trustServerCertificate: true 
     }
 };
 
 const connectDB = async () => {
     try {
         let pool = await sql.connect(config);
-        console.log("✅ Đã kết nối thành công tới SQL Server!");
+        console.log("Đã kết nối thành công tới SQL Server!");
         return pool;
     } catch (err) {
-        console.log("❌ Lỗi kết nối Database:", err);
+        console.log("Lỗi kết nối Database:", err);
     }
 };
 

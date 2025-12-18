@@ -206,16 +206,15 @@ const resetPassword = async (req, res) => {
         // Xóa Token sau khi dùng
         await pool.request().input('token', sql.NVarChar, token).query("DELETE FROM PasswordResets WHERE Token = @token");
 
-        console.log("✅ Đổi mật khẩu thành công cho UserID:", userId);
+        console.log("Đổi mật khẩu thành công cho UserID:", userId);
         res.json({ message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại." });
 
     } catch (error) {
-        console.error("❌ Lỗi SQL:", error);
+        console.error("Lỗi SQL:", error);
         res.status(500).json({ message: "Lỗi server" });
     }
 };
 
-// --- XUẤT ĐỦ 7 HÀM ---
 module.exports = { 
     registerUser, 
     loginUser, 

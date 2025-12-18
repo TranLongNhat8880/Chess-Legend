@@ -41,6 +41,6 @@ app.use('/api/auth', authRoutes);
 
 // Khởi động Server
 server.listen(PORT, async () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
+    console.log(`Server running at http://localhost:${PORT}`);
     await connectDB();
 });

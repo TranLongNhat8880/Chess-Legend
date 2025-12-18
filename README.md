@@ -2,11 +2,11 @@
 
 ![Banner](client/assets/images/Board.png)
 
-## 💡 Giới thiệu dự án
+## Giới thiệu dự án
 
 **Chess Legend** là một ứng dụng web chơi cờ vua trực tuyến thời gian thực (Real-time), được phát triển với mục tiêu xây dựng một nền tảng thi đấu chuyên nghiệp, công bằng và hấp dẫn. Dự án đã hoàn thành **100%** các chức năng cốt lõi theo yêu cầu phân tích thiết kế hệ thống, hỗ trợ cả chế độ chơi PvP và PvE.
 
-## ✨ Tính năng chính (Core Features)
+## Tính năng chính (Core Features)
 
 ### 1. Hệ thống Trận đấu
 * **PvP Online (Real-time):**
@@ -111,7 +111,7 @@ Mở Terminal tại thư mục server/.
 
 Cài đặt các thư viện cần thiết:
 ```bash
-npm install
+npm install express mssql cors dotenv socket.io nodemailer
 ```
 Tạo file .env trong thư mục server/ và điền thông tin cấu hình:
 
